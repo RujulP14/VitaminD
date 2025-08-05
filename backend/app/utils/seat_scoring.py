@@ -2,7 +2,6 @@ import math
 from datetime import datetime, timedelta
 from typing import Dict, Tuple, Optional
 from ..utils.sun import subsolar_point
-import ephem
 
 class SeatScorer:
     def __init__(self):
