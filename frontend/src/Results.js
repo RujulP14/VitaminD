@@ -244,10 +244,10 @@ export default function Results() {
       endLat: toAp.lat,
       endLng: toAp.lon,
       color: '#FF5722',
-      stroke: 2,
-      dashLength: 0.4,
+      stroke: 0.5,
+      dashLength: 1,
       dashGap: 0.2,
-      dashAnimateTime: 1500
+      dashAnimateTime: 5000
     };
 
     // Static airport points - only recalculate when airports change
@@ -257,14 +257,14 @@ export default function Results() {
         lng: fromAp.lon,
         color: '#4CAF50',
         size: 1.0,
-        label: `${params.from}`
+        label: (`${params.from}`).toUpperCase()
       },
       {
         lat: toAp.lat,
         lng: toAp.lon,
         color: '#F44336',
         size: 1.0,
-        label: `${params.to}`
+        label: (`${params.to}`).toUpperCase()
       }
     ];
 
@@ -281,7 +281,7 @@ export default function Results() {
         lat: planePoint[0],
         lng: planePoint[1],
         color: '#2196F3',
-        size: 8.0,
+        size: 2.5,
         label: 'PLANE'
       });
     }
@@ -292,7 +292,7 @@ export default function Results() {
         lat: wrappedSunPoint[0],
         lng: wrappedSunPoint[1],
         color: '#FFD54F',
-        size: 12.0,
+        size: 4.0,
         label: 'SUN'
       });
     }
@@ -467,7 +467,8 @@ export default function Results() {
                   pointsData={allPoints}
                   pointColor="color"
                   pointSize="size"
-                  pointAltitude={0.1}
+                  pointRadius={1}
+                  pointAltitude={0.01}
                   pointLabel="label"
                   pointLabelDotRadius={0}
                   pointLabelSize={1.0}
