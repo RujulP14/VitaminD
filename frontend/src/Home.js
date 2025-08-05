@@ -294,7 +294,7 @@ export default function Home() {
               <span style={{ WebkitTextFillColor: 'initial', background: 'none', marginRight: 8 }}>
                 {isDarkMode ? '🌇' : '🌅'}
               </span>
-              SunView Seat Finder
+              Vitamin D Seat Finder
             </Typography>
           </Fade>
           

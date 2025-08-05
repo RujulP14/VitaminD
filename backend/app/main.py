@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db import init_db
 from .routers import router
 
-app = FastAPI(title="SunView API")
+app = FastAPI(title="Vitamin D API")
 
 app.add_middleware(
     CORSMiddleware,

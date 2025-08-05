@@ -80,7 +80,7 @@ export default function LoadingPage({ onValidationComplete, formData }) {
             mb: 2,
           }}
         >
-          🌅 SunView
+          🌅 Vitamin D
         </Typography>
 
         <CircularProgress

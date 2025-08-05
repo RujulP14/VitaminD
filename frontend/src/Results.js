@@ -44,8 +44,8 @@ export default function Results() {
   const [isGlobeView, setIsGlobeView] = useState(true);
 
   /* fetch airport coords */
-  const { data: fromAp, error: fromApError } = useSWR(params.from ? `/api/airport/${params.from}` : null, fetcher);
-  const { data: toAp, error: toApError }   = useSWR(params.to   ? `/api/airport/${params.to}`   : null, fetcher);
+  const { data: fromAp, error: fromApError } = useSWR(params.from ? `https://vitamind-u5pw.onrender.com/api/airport/${params.from}` : null, fetcher);
+  const { data: toAp, error: toApError }   = useSWR(params.to   ? `https://vitamind-u5pw.onrender.com/api/airport/${params.to}`   : null, fetcher);
   
   // Debug airport data fetching
   console.log('Airport data:', { 
@@ -57,14 +57,14 @@ export default function Results() {
     toParams: params.to
   });
   const { data: sunData } = useSWR(
-    params.date && params.time ? `/api/subsolar?date=${params.date}&time=${params.time}` : null,
+    params.date && params.time ? `https://vitamind-u5pw.onrender.com/api/subsolar?date=${params.date}&time=${params.time}` : null,
     fetcher
   );
   
   // Fetch seat recommendation
   const { data: seatRecommendation } = useSWR(
     params.from && params.to && params.date && params.time && params.duration ? 
-    `/api/seat-recommendation?from_iata=${params.from}&to_iata=${params.to}&date=${params.date}&time=${params.time}&duration=${params.duration}&preference=${params.preference || 'sunrise'}` : null,
+    `https://vitamind-u5pw.onrender.com/api/seat-recommendation?from_iata=${params.from}&to_iata=${params.to}&date=${params.date}&time=${params.time}&duration=${params.duration}&preference=${params.preference || 'sunrise'}` : null,
     fetcher
   );
 
@@ -391,7 +391,7 @@ export default function Results() {
             }}
             onClick={() => navigate('/')}
           >
-            🌅 SunView
+            🌅 Vitamin D
           </Typography>
         </Box>
 

@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from .models import Airport
 from .db import get_session
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="https://vitamind-u5pw.onrender.com//api")
 
 @router.get("/health")
 def health():
