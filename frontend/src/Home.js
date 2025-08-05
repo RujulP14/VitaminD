@@ -250,7 +250,7 @@ export default function Home() {
             p: 4, 
             maxWidth: 700,
             background: isDarkMode 
-              ? 'rgba(255, 255, 255, 0.1)'
+              ? 'rgba(45, 26, 10, 0.85)'
               : 'rgba(255, 255, 255, 0.9)',
             borderRadius: 3,
             boxShadow: isDarkMode 
@@ -275,8 +275,8 @@ export default function Home() {
               textAlign="center" 
               gutterBottom
               sx={{
-                background: isDarkMode 
-                  ? 'linear-gradient(45deg, #E3F2FD, #E3F2FD)'
+                background: isDarkMode
+                  ? 'linear-gradient(45deg, #FF6B35, #FFD54F)'
                   : 'linear-gradient(45deg, #FF5722, #FF9800)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
@@ -288,9 +288,13 @@ export default function Home() {
                   '0%': { filter: 'brightness(1)' },
                   '100%': { filter: 'brightness(1.1)' },
                 },
+                display: 'inline-block',
               }}
             >
-              {isDarkMode ? '🌆' : '🌅'} SunView Seat Finder
+              <span style={{ WebkitTextFillColor: 'initial', background: 'none', marginRight: 8 }}>
+                {isDarkMode ? '🌇' : '🌅'}
+              </span>
+              SunView Seat Finder
             </Typography>
           </Fade>
           
