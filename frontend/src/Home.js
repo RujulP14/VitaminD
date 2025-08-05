@@ -87,8 +87,8 @@ export default function Home() {
     // Validate airports before redirecting
     try {
       const [fromResponse, toResponse] = await Promise.all([
-        fetch(`https://vitamind-u5pw.onrender.com/api/airport/${form.from}`),
-        fetch(`https://vitamind-u5pw.onrender.com/api/airport/${form.to}`)
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/airport/${form.from}`),
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/airport/${form.to}`)
       ]);
       
       const fromData = await fromResponse.json();
@@ -246,32 +246,33 @@ export default function Home() {
         <Stack 
           component="form" 
           spacing={3} 
+          height="90vh"
           sx={{ 
-            p: 4, 
-            maxWidth: 700,
+            p: 4, // reduced from 4
+            maxWidth: 525, // reduced from 700 (75% of original)
             background: isDarkMode 
               ? 'rgba(45, 26, 10, 0.85)'
               : 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 3,
+            borderRadius: 2.25, // reduced from 3
             boxShadow: isDarkMode 
-              ? '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-              : '0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2)',
-            backdropFilter: 'blur(20px)',
+              ? '0 6px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+              : '0 6px 24px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(15px)', // reduced from 20px
             border: '1px solid rgba(255, 255, 255, 0.2)',
-            transform: 'perspective(1000px) rotateX(5deg)',
+            transform: 'perspective(750px) rotateX(3.75deg)', // reduced from 1000px and 5deg
             transition: 'all 0.3s ease',
             '&:hover': {
-              transform: 'perspective(1000px) rotateX(0deg) translateY(-5px)',
+              transform: 'perspective(750px) rotateX(0deg) translateY(-3.75px)', // reduced from -5px
               boxShadow: isDarkMode 
-                ? '0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15)'
-                : '0 12px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3)',
+                ? '0 9px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15)'
+                : '0 9px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3)',
             },
           }} 
           onSubmit={handleSubmit}
         >
           <Fade in={true} timeout={1500}>
             <Typography 
-              variant="h3" 
+              fontSize="1em" 
               textAlign="center" 
               gutterBottom
               sx={{
@@ -300,10 +301,11 @@ export default function Home() {
           
           <Fade in={true} timeout={2000}>
             <Typography 
-              variant="body1" 
+              fontSize="0.75em"
               textAlign="center" 
               gutterBottom
               sx={{
+                margin: "0!important",
                 fontStyle: 'italic',
                 opacity: 0.8,
                 color: isDarkMode ? '#FFFFFF' : 'text.secondary',
@@ -347,6 +349,7 @@ export default function Home() {
             sx={{
               '& .MuiOutlinedInput-root': {
                 transition: 'all 0.3s ease',
+                fontSize:'0.75em',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -380,6 +383,7 @@ export default function Home() {
             sx={{
               '& .MuiOutlinedInput-root': {
                 transition: 'all 0.3s ease',
+                fontSize:'0.75em',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -411,7 +415,21 @@ export default function Home() {
             InputProps={{
               startAdornment: <Schedule sx={{ mr: 1, color: 'primary.main' }} />,
             }}
-            sx={formFieldStyles}
+            sx={{
+              ...formFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                ...formFieldStyles['& .MuiOutlinedInput-root'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+              '& .MuiInputLabel-root': {
+                ...formFieldStyles['& .MuiInputLabel-root'],
+                fontSize: '0.85em', // Decreased label text size
+              },
+              '& .MuiOutlinedInput-input': {
+                ...formFieldStyles['& .MuiOutlinedInput-input'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+            }}
           />
         </Fade>
         
@@ -428,7 +446,21 @@ export default function Home() {
             InputProps={{
               startAdornment: <AccessTime sx={{ mr: 1, color: 'primary.main' }} />,
             }}
-            sx={formFieldStyles}
+            sx={{
+              ...formFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                ...formFieldStyles['& .MuiOutlinedInput-root'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+              '& .MuiInputLabel-root': {
+                ...formFieldStyles['& .MuiInputLabel-root'],
+                fontSize: '0.85em', // Decreased label text size
+              },
+              '& .MuiOutlinedInput-input': {
+                ...formFieldStyles['& .MuiOutlinedInput-input'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+            }}
           />
         </Fade>
         
@@ -445,7 +477,21 @@ export default function Home() {
             InputProps={{
               startAdornment: <FlightTakeoff sx={{ mr: 1, color: 'primary.main' }} />,
             }}
-            sx={formFieldStyles}
+            sx={{
+              ...formFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                ...formFieldStyles['& .MuiOutlinedInput-root'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+              '& .MuiInputLabel-root': {
+                ...formFieldStyles['& .MuiInputLabel-root'],
+                fontSize: '0.85em', // Decreased label text size
+              },
+              '& .MuiOutlinedInput-input': {
+                ...formFieldStyles['& .MuiOutlinedInput-input'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+            }}
           />
         </Fade>
         
@@ -456,7 +502,21 @@ export default function Home() {
             value={form.preference} 
             onChange={handleChange('preference')}
             fullWidth
-            sx={formFieldStyles}
+            sx={{
+              ...formFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                ...formFieldStyles['& .MuiOutlinedInput-root'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+              '& .MuiInputLabel-root': {
+                ...formFieldStyles['& .MuiInputLabel-root'],
+                fontSize: '0.85em', // Decreased label text size
+              },
+              '& .MuiOutlinedInput-input': {
+                ...formFieldStyles['& .MuiOutlinedInput-input'],
+                fontSize: '0.85em', // Decreased input text size
+              },
+            }}
           >
             <MenuItem value="sunrise">🌅 Sunrise</MenuItem>
             <MenuItem value="sunset">🌇 Sunset</MenuItem>
@@ -471,7 +531,7 @@ export default function Home() {
             sx={{ 
               mt: 2,
               py: 1.5,
-              fontSize: '1.1rem',
+              fontSize: '1em',
               background: isDarkMode 
                 ? 'linear-gradient(45deg, #FF6B35, #FFD54F)'
                 : 'linear-gradient(45deg, #FF5722, #FF9800)',

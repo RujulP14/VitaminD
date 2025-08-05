@@ -44,8 +44,8 @@ export default function Results() {
   const [isGlobeView, setIsGlobeView] = useState(true);
 
   /* fetch airport coords */
-  const { data: fromAp, error: fromApError } = useSWR(params.from ? `https://vitamind-u5pw.onrender.com/api/airport/${params.from}` : null, fetcher);
-  const { data: toAp, error: toApError }   = useSWR(params.to   ? `https://vitamind-u5pw.onrender.com/api/airport/${params.to}`   : null, fetcher);
+  const { data: fromAp, error: fromApError } = useSWR(params.from ? `${process.env.REACT_APP_BASE_URL}/api/airport/${params.from}` : null, fetcher);
+  const { data: toAp, error: toApError }   = useSWR(params.to   ? `${process.env.REACT_APP_BASE_URL}/api/airport/${params.to}`   : null, fetcher);
   
   // Debug airport data fetching
   console.log('Airport data:', { 
@@ -57,14 +57,14 @@ export default function Results() {
     toParams: params.to
   });
   const { data: sunData } = useSWR(
-    params.date && params.time ? `https://vitamind-u5pw.onrender.com/api/subsolar?date=${params.date}&time=${params.time}` : null,
+    params.date && params.time ? `${process.env.REACT_APP_BASE_URL}/api/subsolar?date=${params.date}&time=${params.time}` : null,
     fetcher
   );
   
   // Fetch seat recommendation
   const { data: seatRecommendation } = useSWR(
     params.from && params.to && params.date && params.time && params.duration ? 
-    `https://vitamind-u5pw.onrender.com/api/seat-recommendation?from_iata=${params.from}&to_iata=${params.to}&date=${params.date}&time=${params.time}&duration=${params.duration}&preference=${params.preference || 'sunrise'}` : null,
+    `${process.env.REACT_APP_BASE_URL}/api/seat-recommendation?from_iata=${params.from}&to_iata=${params.to}&date=${params.date}&time=${params.time}&duration=${params.duration}&preference=${params.preference || 'sunrise'}` : null,
     fetcher
   );
 
@@ -419,8 +419,8 @@ export default function Results() {
           {/* Map/Globe Section - Left Side */}
           <Box sx={{ 
             width: '50%', 
-            height: 'calc(100vh - 200px)', 
-            maxHeight: 'calc(100vh - 200px)',
+            height: 'calc(100vh - 100px)', 
+            maxHeight: 'calc(100vh - 100px)',
             borderRadius: 4,
             overflow: 'hidden',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
@@ -489,8 +489,8 @@ export default function Results() {
                   globeRadius={200}
                   atmosphereColor={isDarkMode ? '#1a1a1a' : '#87CEEB'}
                   atmosphereAltitude={0.15}
-                  width={1200}
-                  height={1000}
+                  width={700}
+                  height={600}
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -524,11 +524,12 @@ export default function Results() {
                   zoomControl={false}
                 >
                   <MapZoomController fromAp={fromAp} toAp={toAp} />
-                  <TileLayer 
-                    url={isDarkMode 
-                      ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-                      : "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png"
-                    } 
+                  <TileLayer
+                    url={
+                      isDarkMode
+                        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    }
                   />
                   {coordsLatLng.length > 1 && (
                     <>
@@ -556,7 +557,7 @@ export default function Results() {
         spacing={4}
         sx={{ 
           width: 'calc(50vw - 12px)', 
-          height: 'calc(100vh - 80px)', 
+          height: '100%', 
           justifyContent: 'center',
           alignItems: 'center',
         }}
@@ -567,6 +568,7 @@ export default function Results() {
           borderRadius: 3, 
           width: '100%', 
           maxWidth: 500,
+          minHeight: 180, 
           background: isDarkMode 
             ? 'rgba(255, 255, 255, 0.1)'
             : 'rgba(255, 255, 255, 0.9)',
@@ -577,6 +579,7 @@ export default function Results() {
             transform: 'translateY(-2px)',
             boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
           },
+          fontSize: '0.9rem', // reduce font size by 0.1
         }}>
           <Typography variant="h4" gutterBottom sx={{ 
             background: 'linear-gradient(45deg, #FF6B35, #FFD54F)',
@@ -585,27 +588,28 @@ export default function Results() {
             WebkitTextFillColor: 'transparent',
             fontWeight: 'bold',
             textAlign: 'center',
+            fontSize: '1.55rem', // default h4 is 2.125rem, reduced by 0.1
           }}>
             ✈️ Flight Details
           </Typography>
           <Stack spacing={2}>
             <Stack direction="row" justifyContent="space-between">
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ fontSize: '0.85rem' }}>
                 <strong>From:</strong> {params.from.toUpperCase()}
               </Typography>
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ fontSize: '0.85rem' }}>
                 <strong>To:</strong> {params.to.toUpperCase()}
               </Typography>
             </Stack>
-            <Stack direction="row" spacing={2}>
-              <Typography variant="h6">
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="h6" sx={{ fontSize: '0.85rem' }}>
                 <strong>Date:</strong> {params.date}
               </Typography>
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ fontSize: '0.85rem' }}>
                 <strong>Time:</strong> {params.time} UTC
               </Typography>
             </Stack>
-            <Typography variant="h6">
+            <Typography variant="h6" sx={{ fontSize: '0.85rem' }}>
               <strong>Duration:</strong> {durationMin} min
             </Typography>
           </Stack>
@@ -618,6 +622,7 @@ export default function Results() {
             borderRadius: 3, 
             width: '100%', 
             maxWidth: 500,
+            minHeight: 162, // reduced by 10% from 180
             background: seatRecommendation.preference === 'sunrise' 
               ? 'linear-gradient(135deg, #FF6B35 0%, #FFD54F 50%, #E3F2FD 100%)'
               : 'linear-gradient(135deg, #FF5722 0%, #FF9800 50%, #1A1A1A 100%)',
@@ -634,36 +639,37 @@ export default function Results() {
               '0%, 100%': { transform: 'scale(1)' },
               '50%': { transform: 'scale(1.02)' },
             },
+            fontSize: '0.9rem',
           }}>
-                          <Stack spacing={2}>
-                <Typography variant="h4" sx={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }} gutterBottom>
-                  🪑 Seat Recommendation
-                </Typography>
-                
-                {/* Recommended Side Display */}
-                <Box sx={{ textAlign: 'center' }}>
-                  <Chip
-                    label={`${seatRecommendation.scores.recommended_side.toUpperCase()} SIDE`}
-                    color="primary"
-                    size="large"
-                    sx={{
-                      fontSize: '1.3rem',
-                      fontWeight: 'bold',
-                      py: 1.5,
-                      px: 3,
-                      bgcolor: seatRecommendation.scores.recommended_side === 'left' 
-                        ? 'leftSeat.main' 
-                        : 'rightSeat.main',
-                      color: 'white',
-                    }}
-                  />
-                </Box>
-                
-                {/* Preference Info */}
-                <Typography variant="h6" sx={{ color: 'white', textAlign: 'center', opacity: 0.9 }}>
-                  Based on {seatRecommendation.preference} preference
-                </Typography>
-              </Stack>
+            <Stack spacing={2}>
+              <Typography variant="h4" sx={{ color: 'white', textAlign: 'center', fontWeight: 'bold', fontSize: '1.55rem' }} gutterBottom>
+                🪑 Seat Recommendation
+              </Typography>
+              
+              {/* Recommended Side Display */}
+              <Box sx={{ textAlign: 'center' }}>
+                <Chip
+                  label={`${seatRecommendation.scores.recommended_side.toUpperCase()} SIDE`}
+                  color="primary"
+                  size="medium"
+                  sx={{
+                    fontSize: '1.2rem', // was 1.3rem
+                    fontWeight: 'bold',
+                    py: 1.35, // was 1.5
+                    px: 2.7, // was 3
+                    bgcolor: seatRecommendation.scores.recommended_side === 'left' 
+                      ? 'leftSeat.main' 
+                      : 'rightSeat.main',
+                    color: 'white',
+                  }}
+                />
+              </Box>
+              
+              {/* Preference Info */}
+              <Typography variant="h6" sx={{ color: 'white', textAlign: 'center', opacity: 0.9, fontSize: '1.05rem' }}>
+                Based on {seatRecommendation.preference} preference
+              </Typography>
+            </Stack>
           </Paper>
         )}
 
@@ -673,6 +679,7 @@ export default function Results() {
           borderRadius: 3, 
           width: '100%', 
           maxWidth: 500,
+          minHeight: 450, // reduced by 10% from 180
           background: isDarkMode 
             ? 'rgba(255, 255, 255, 0.1)'
             : 'rgba(255, 255, 255, 0.9)',
@@ -683,6 +690,7 @@ export default function Results() {
             transform: 'translateY(-2px)',
             boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
           },
+          fontSize: '0.9rem',
         }}>
           <Typography variant="h4" gutterBottom sx={{ 
             background: 'linear-gradient(45deg, #FF6B35, #FFD54F)',
@@ -691,15 +699,13 @@ export default function Results() {
             WebkitTextFillColor: 'transparent',
             fontWeight: 'bold',
             textAlign: 'center',
+            fontSize: '1.55rem',
           }}>
             ✈️ Flight Progress
           </Typography>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            Drag the slider to simulate plane movement along the flight path
+          <Typography variant="h6" color="text.secondary" align='center' gutterBottom sx={{ fontSize: '0.85rem' }}>
+          Drag the slider to simulate plane movement along the flight path
           </Typography>
-          
-
-          
           {/* Custom Styled Slider */}
           <Slider
             value={progress}
@@ -708,68 +714,61 @@ export default function Results() {
             sx={{
               '& .MuiSlider-track': {
                 background: 'linear-gradient(90deg, #FF6B35, #FFD54F)',
-                height: 6,
+                height: 5.4, // 10% less than 6
               },
               '& .MuiSlider-thumb': {
-                width: 20,
-                height: 20,
+                width: 18, // 10% less than 20
+                height: 18,
                 background: 'linear-gradient(45deg, #FF6B35, #FFD54F)',
-                boxShadow: '0 4px 12px rgba(255, 107, 53, 0.4)',
-                '&:hover': {
-                  transform: 'scale(1.2)',
-                  boxShadow: '0 6px 16px rgba(255, 107, 53, 0.6)',
-                },
+                boxShadow: '0 3.6px 10.8px rgba(255, 107, 53, 0.4)', // 10% less
               },
               '& .MuiSlider-rail': {
-                height: 6,
+                height: 5.4,
                 opacity: 0.3,
               },
             }}
           />
-          
           {/* Progress Labels */}
           <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-            <Typography variant="h6">Departure</Typography>
-            <Typography variant="h6" color="primary" fontWeight="bold">
+            <Typography variant="h6" sx={{ fontSize: '0.85rem' }}>Departure</Typography>
+            <Typography variant="h6" color="primary" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
               {Math.round(progress)}%
             </Typography>
-            <Typography variant="h6">Arrival</Typography>
+            <Typography variant="h6" sx={{ fontSize: '0.85rem' }}>Arrival</Typography>
           </Stack>
-          
           {/* Flight Statistics */}
           <Stack direction="row" justifyContent="space-between" sx={{ mt: 2, p: 2, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" color="primary" fontWeight="bold">
+              <Typography variant="h6" color="primary" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
                 {Math.round(totalKm)} km
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 Distance
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" color="primary" fontWeight="bold">
+              <Typography variant="h6" color="primary" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
                 {durationMin} min
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 Duration
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" color="primary" fontWeight="bold">
+              <Typography variant="h6" color="primary" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
                 {Math.round(progress * totalKm / 100)} km
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 Progress
               </Typography>
             </Box>
           </Stack>
-          
           {/* Departure and Arrival Times */}
           <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
               {params.time} UTC
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
               {(() => {
                 const [hour, minute] = params.time.split(':').map(Number);
                 const [year, month, day] = params.date.split('-').map(Number);
@@ -781,12 +780,11 @@ export default function Results() {
               })()}
             </Typography>
           </Stack>
-          
           {/* Control Buttons */}
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 3, justifyContent: 'center' }}>
             <IconButton 
               onClick={() => setProgress(0)} 
-              size="medium"
+              size="small" // was medium
               sx={{
                 bgcolor: 'rgba(255, 107, 53, 0.1)',
                 color: '#FF6B35',
@@ -797,26 +795,26 @@ export default function Results() {
                 transition: 'all 0.3s ease',
               }}
             >
-              <SkipPrevious />
+              <SkipPrevious fontSize="small" /> {/* 10% smaller */}
             </IconButton>
             <IconButton 
               onClick={handlePlayPause} 
-              size="large"
+              size="medium" // was large
               sx={{
                 bgcolor: 'linear-gradient(45deg, #FF6B35, #FFD54F)',
                 color: isDarkMode ? 'white' : '#2D1A0A',
                 '&:hover': {
                   transform: 'scale(1.1)',
-                  boxShadow: '0 6px 16px rgba(255, 107, 53, 0.4)',
+                  boxShadow: '0 5.4px 14.4px rgba(255, 107, 53, 0.4)', // 10% less
                 },
                 transition: 'all 0.3s ease',
               }}
             >
-              {isPlaying ? <Pause /> : <PlayArrow />}
+              {isPlaying ? <Pause fontSize="small" /> : <PlayArrow fontSize="small" />}
             </IconButton>
             <IconButton 
               onClick={() => setProgress(100)} 
-              size="medium"
+              size="small" // was medium
               sx={{
                 bgcolor: 'rgba(255, 213, 79, 0.1)',
                 color: '#FFD54F',
@@ -827,15 +825,14 @@ export default function Results() {
                 transition: 'all 0.3s ease',
               }}
             >
-              <SkipNext />
+              <SkipNext fontSize="small" />
             </IconButton>
-            
             {/* Speed Control */}
-            <FormControl size="small" sx={{ minWidth: 60 }}>
+            <FormControl size="small" sx={{ minWidth: 54 }}>
               <Select 
                 value={speed} 
                 onChange={(e) => setSpeed(e.target.value)}
-                sx={{ height: 28 }}
+                sx={{ height: 25, fontSize: '0.9rem' }} // 10% less than 28
               >
                 <MenuItem value={0.5}>0.5x</MenuItem>
                 <MenuItem value={1}>1x</MenuItem>
@@ -843,25 +840,21 @@ export default function Results() {
               </Select>
             </FormControl>
           </Stack>
-          
           {/* Flight Information */}
           <Stack spacing={1} sx={{ mt: 2, textAlign: 'center' }}>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
               Flight Time: {Math.round((progress / 100) * durationMin)} min / {durationMin} min
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
               Distance: {Math.round((progress / 100) * totalKm)} km / {Math.round(totalKm)} km
             </Typography>
             {planePoint && currentSunPoint && (
-              <Typography variant="body1" color="text.secondary">
+              <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                 Sun Angle: {(() => {
-                  // Calculate angle between plane and sun
                   const dx = currentSunPoint[1] - planePoint[1]; // longitude difference
                   const dy = currentSunPoint[0] - planePoint[0]; // latitude difference
                   const angle = Math.atan2(dy, dx) * 180 / Math.PI;
                   const normalizedAngle = Math.round((angle + 360) % 360);
-                  
-                  // Determine left/right direction
                   let direction = '';
                   if (normalizedAngle > 0 && normalizedAngle < 180) {
                     direction = ' (Right)';
@@ -870,15 +863,13 @@ export default function Results() {
                   } else if (normalizedAngle === 0 || normalizedAngle === 180) {
                     direction = ' (Front/Back)';
                   }
-                  
                   return normalizedAngle + direction;
                 })()}
               </Typography>
             )}
           </Stack>
-          
           {/* Keyboard Controls Help */}
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 1, textAlign: 'center', fontSize: '0.7rem' }}>
             Keyboard: ← → (5%), Home/End, Space (play/pause)
           </Typography>
         </Paper>
@@ -888,11 +879,11 @@ export default function Results() {
           component={Link} 
           to="/" 
           variant="outlined" 
-          size="medium"
+          size="small"
           sx={{ 
-            py: 1,
-            px: 2,
-            fontSize: '1rem',
+            py: 0.9, // 10% less than 1
+            px: 1.8, // 10% less than 2
+            fontSize: '0.9rem',
             fontWeight: 'bold',
             borderRadius: 2,
             width: 'fit-content',
