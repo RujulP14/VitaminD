@@ -205,6 +205,15 @@ export default function Results() {
   
   const currentSunPoint = updatedSunData ? [updatedSunData.lat, updatedSunData.lon] : sunPoint;
 
+  /* Wrap longitude for sun marker to handle continuous movement */
+  const wrapLongitude = (lon) => {
+    // Normalize longitude to -180 to 180 range
+    while (lon > 180) lon -= 360;
+    while (lon < -180) lon += 360;
+    return lon;
+  };
+
+  const wrappedSunPoint = currentSunPoint ? [currentSunPoint[0], wrapLongitude(currentSunPoint[1])] : null;
 
 
   /* Auto-play functionality */
@@ -226,10 +235,12 @@ export default function Results() {
 
   /* Reset progress when play is pressed at 100% */
   const handlePlayPause = () => {
-    if (progress >= 100) {
+    if (progress >= 100 && !isPlaying) {
       setProgress(0);
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(!isPlaying);
     }
-    setIsPlaying(!isPlaying);
   };
 
   /* Keyboard controls */
@@ -255,15 +266,20 @@ export default function Results() {
   const startIcon = icon('marker-start.png');
   const endIcon   = icon('marker-end.png');
   const sunIcon   = icon('sun-marker.png');
-  const createPlaneIcon = (rotation) => new L.Icon({
-    iconUrl: process.env.PUBLIC_URL + '/markers/plane.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    className: 'plane-icon',
-    html: `<div style="transform: rotate(${rotation}deg); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-             <img src="${process.env.PUBLIC_URL + '/markers/plane.png'}" style="width: 32px; height: 32px;" />
-           </div>`
-  });
+  
+  /* Memoized plane icon creation to prevent recreation on every render */
+  const createPlaneIcon = useMemo(() => {
+    const planeImage = isDarkMode ? 'plane-dark.png' : 'plane.png';
+    return (rotation) => new L.Icon({
+      iconUrl: process.env.PUBLIC_URL + `/markers/${planeImage}`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      className: 'plane-icon',
+      html: `<div style="transform: rotate(${rotation}deg); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+               <img src="${process.env.PUBLIC_URL + `/markers/${planeImage}`}" style="width: 32px; height: 32px;" />
+             </div>`
+    });
+  }, [isDarkMode]);
 
       return (
       <Stack sx={{ p: 4, height: '100vh', position: 'relative' }}>
@@ -343,8 +359,8 @@ export default function Results() {
                 <Polyline positions={coordsLatLng} color="red" />
                 <Marker position={coordsLatLng[0]} icon={startIcon} />
                 <Marker position={coordsLatLng.at(-1)} icon={endIcon} />
-                {currentSunPoint && (
-                  <Marker position={currentSunPoint} icon={sunIcon} />
+                {wrappedSunPoint && (
+                  <Marker position={wrappedSunPoint} icon={sunIcon} />
                 )}
                 {planePoint && (
                   <Marker 
@@ -611,7 +627,7 @@ export default function Results() {
               size="large"
               sx={{
                 bgcolor: 'linear-gradient(45deg, #FF6B35, #FFD54F)',
-                color: 'white',
+                color: isDarkMode ? 'white' : '#2D1A0A',
                 '&:hover': {
                   transform: 'scale(1.1)',
                   boxShadow: '0 6px 16px rgba(255, 107, 53, 0.4)',
