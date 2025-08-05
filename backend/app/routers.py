@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
-import os 
+
 from .models import Airport
 from .db import get_session
 
-BASE_URL = os.getenv("REACT_APP_BASE_URL")
-router = APIRouter(prefix=f"{BASE_URL}/api")
+router = APIRouter(prefix="https://vitamind-u5pw.onrender.com//api")
 
 @router.get("/health")
 def health():

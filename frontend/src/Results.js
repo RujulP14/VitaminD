@@ -11,8 +11,6 @@ import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import 'leaflet/dist/leaflet.css';
 
-const BASE_URL = process.env.REACT_APP_BASE_URL || '';
-
 const fetcher = (u) => fetch(u).then((r) => r.json());
 
 // Custom component to handle map zoom
@@ -46,8 +44,8 @@ export default function Results() {
   const [isGlobeView, setIsGlobeView] = useState(true);
 
   /* fetch airport coords */
-  const { data: fromAp, error: fromApError } = useSWR(params.from ? `${BASE_URL}/api/airport/${params.from}` : null, fetcher);
-  const { data: toAp, error: toApError }   = useSWR(params.to   ? `${BASE_URL}/api/airport/${params.to}`   : null, fetcher);
+  const { data: fromAp, error: fromApError } = useSWR(params.from ? `https://vitamind-u5pw.onrender.com/api/airport/${params.from}` : null, fetcher);
+  const { data: toAp, error: toApError }   = useSWR(params.to   ? `https://vitamind-u5pw.onrender.com/api/airport/${params.to}`   : null, fetcher);
   
   // Debug airport data fetching
   console.log('Airport data:', { 
@@ -59,14 +57,14 @@ export default function Results() {
     toParams: params.to
   });
   const { data: sunData } = useSWR(
-    params.date && params.time ? `${BASE_URL}/api/subsolar?date=${params.date}&time=${params.time}` : null,
+    params.date && params.time ? `https://vitamind-u5pw.onrender.com/api/subsolar?date=${params.date}&time=${params.time}` : null,
     fetcher
   );
   
   // Fetch seat recommendation
   const { data: seatRecommendation } = useSWR(
     params.from && params.to && params.date && params.time && params.duration ? 
-    `${BASE_URL}/api/seat-recommendation?from_iata=${params.from}&to_iata=${params.to}&date=${params.date}&time=${params.time}&duration=${params.duration}&preference=${params.preference || 'sunrise'}` : null,
+    `https://vitamind-u5pw.onrender.com/api/seat-recommendation?from_iata=${params.from}&to_iata=${params.to}&date=${params.date}&time=${params.time}&duration=${params.duration}&preference=${params.preference || 'sunrise'}` : null,
     fetcher
   );
 
@@ -526,9 +524,11 @@ export default function Results() {
                   zoomControl={false}
                 >
                   <MapZoomController fromAp={fromAp} toAp={toAp} />
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  <TileLayer 
+                    url={isDarkMode 
+                      ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+                      : "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png"
+                    } 
                   />
                   {coordsLatLng.length > 1 && (
                     <>
