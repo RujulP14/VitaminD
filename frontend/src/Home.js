@@ -85,6 +85,7 @@ export default function Home() {
     setIsLoading(true); // Start loading
     
     // Validate airports before redirecting
+    
     try {
       const [fromResponse, toResponse] = await Promise.all([
         fetch(`https://vitamind-u5pw.onrender.com/api/airport/${form.from}`),
