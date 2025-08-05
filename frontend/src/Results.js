@@ -432,7 +432,6 @@ export default function Results() {
               transform: 'translateY(-2px)',
             },
           }}>
-            {/* View Toggle Button */}
             <IconButton
               onClick={() => setIsGlobeView(!isGlobeView)}
               sx={{
@@ -442,6 +441,10 @@ export default function Results() {
                 zIndex: 1000,
                 bgcolor: 'background.paper',
                 boxShadow: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: 60,
                 '&:hover': {
                   bgcolor: 'background.paper',
                   transform: 'scale(1.1)',
@@ -449,7 +452,11 @@ export default function Results() {
               }}
             >
               {isGlobeView ? <Map /> : <Public />}
+              <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                {isGlobeView ? '2D' : '3D'}
+              </Typography>
             </IconButton>
+
             
             {/* 3D Globe View */}
             {isGlobeView && (
