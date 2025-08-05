@@ -87,8 +87,8 @@ export default function Home() {
     // Validate airports before redirecting
     try {
       const [fromResponse, toResponse] = await Promise.all([
-        fetch(`/api/airport/${form.from}`),
-        fetch(`/api/airport/${form.to}`)
+        fetch(`https://vitamind-u5pw.onrender.com/api/airport/${form.from}`),
+        fetch(`https://vitamind-u5pw.onrender.com/api/airport/${form.to}`)
       ]);
       
       const fromData = await fromResponse.json();
