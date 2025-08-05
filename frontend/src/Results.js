@@ -1,12 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Typography, Button, Stack, Slider, Box, IconButton, FormControl, Select, MenuItem, Chip, Paper } from '@mui/material';
-import { PlayArrow, Pause, SkipPrevious, SkipNext, WbSunny, DarkMode, FlightTakeoff, FlightLand } from '@mui/icons-material';
+import { PlayArrow, Pause, SkipPrevious, SkipNext, WbSunny, DarkMode, FlightTakeoff, FlightLand, Map, Public } from '@mui/icons-material';
 import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { greatCircle, length as lineLength, along } from '@turf/turf';
 import useSWR from 'swr';
 import { useTheme } from './ThemeContext';
+import Globe from 'react-globe.gl';
+import * as THREE from 'three';
 import 'leaflet/dist/leaflet.css';
 
 const fetcher = (u) => fetch(u).then((r) => r.json());
@@ -34,6 +36,12 @@ export default function Results() {
   const params = Object.fromEntries(new URLSearchParams(search));
   const durationMin = Number(params.duration || 0);
   const { isDarkMode, toggleTheme } = useTheme();
+  
+  // Globe ref for camera controls
+  const globeRef = useRef();
+  
+  // View toggle state
+  const [isGlobeView, setIsGlobeView] = useState(true);
 
   /* fetch airport coords */
   const { data: fromAp, error: fromApError } = useSWR(params.from ? `/api/airport/${params.from}` : null, fetcher);
@@ -173,9 +181,9 @@ export default function Results() {
   /* sun point from backend */
   const sunPoint = sunData ? [sunData.lat, sunData.lon] : null;
   
-  /* calculate sun position based on flight progress */
-  const sunPositionAtProgress = useMemo(() => {
-    if (!sunData || !params.date || !params.time || !durationMin) return null;
+  /* calculate sun position based on flight progress - client-side calculation */
+  const currentSunPoint = useMemo(() => {
+    if (!sunData || !params.date || !params.time || !durationMin) return sunPoint;
     
     // Calculate time elapsed based on progress
     const totalMinutes = durationMin;
@@ -189,21 +197,22 @@ export default function Results() {
     // Calculate current time during flight
     const currentFlightTime = new Date(flightStartTime.getTime() + (elapsedMinutes * 60 * 1000));
     
-    // Format for API call
-    const currentDate = currentFlightTime.toISOString().split('T')[0];
-    const currentTime = currentFlightTime.toTimeString().split(' ')[0];
+    // Calculate sun position based on time difference
+    const timeDiffHours = elapsedMinutes / 60; // Convert to hours
+    const earthRotationPerHour = 15; // Earth rotates 15 degrees per hour
     
-    return { date: currentDate, time: currentTime };
+    // Get original sun position
+    const originalLat = sunData.lat;
+    const originalLon = sunData.lon;
+    
+    // Calculate new longitude (sun moves west as time progresses)
+    const newLon = originalLon - (timeDiffHours * earthRotationPerHour);
+    
+    // Latitude changes slightly due to Earth's axial tilt, but for simplicity we'll keep it constant
+    const newLat = originalLat;
+    
+    return [newLat, newLon];
   }, [sunData, params.date, params.time, durationMin, progress]);
-  
-  /* fetch updated sun position */
-  const { data: updatedSunData } = useSWR(
-    sunPositionAtProgress?.date && sunPositionAtProgress?.time ? 
-    `/api/subsolar?date=${sunPositionAtProgress.date}&time=${sunPositionAtProgress.time}` : null,
-    fetcher
-  );
-  
-  const currentSunPoint = updatedSunData ? [updatedSunData.lat, updatedSunData.lon] : sunPoint;
 
   /* Wrap longitude for sun marker to handle continuous movement */
   const wrapLongitude = (lon) => {
@@ -214,6 +223,108 @@ export default function Results() {
   };
 
   const wrappedSunPoint = currentSunPoint ? [currentSunPoint[0], wrapLongitude(currentSunPoint[1])] : null;
+  
+  // Debug sun movement
+  console.log('Sun movement debug:', {
+    progress,
+    sunData,
+    currentSunPoint,
+    wrappedSunPoint,
+    isPlaying
+  });
+
+  /* Prepare data for 3D Globe - optimized for performance */
+  const globeData = useMemo(() => {
+    if (!fromAp || !toAp) return { arcs: [], points: [] };
+
+    // Flight path as arc - only recalculate when airports change
+    const flightArc = {
+      startLat: fromAp.lat,
+      startLng: fromAp.lon,
+      endLat: toAp.lat,
+      endLng: toAp.lon,
+      color: '#FF5722',
+      stroke: 2,
+      dashLength: 0.4,
+      dashGap: 0.2,
+      dashAnimateTime: 1500
+    };
+
+    // Static airport points - only recalculate when airports change
+    const airportPoints = [
+      {
+        lat: fromAp.lat,
+        lng: fromAp.lon,
+        color: '#4CAF50',
+        size: 1.0,
+        label: `${params.from}`
+      },
+      {
+        lat: toAp.lat,
+        lng: toAp.lon,
+        color: '#F44336',
+        size: 1.0,
+        label: `${params.to}`
+      }
+    ];
+
+    return { arcs: [flightArc], staticPoints: airportPoints };
+  }, [fromAp, toAp, params.from, params.to]);
+
+  /* Dynamic points for plane and sun - separate memoization for performance */
+  const dynamicPoints = useMemo(() => {
+    const points = [];
+
+    // Plane position
+    if (planePoint) {
+      points.push({
+        lat: planePoint[0],
+        lng: planePoint[1],
+        color: '#2196F3',
+        size: 8.0,
+        label: 'PLANE'
+      });
+    }
+
+    // Sun position
+    if (wrappedSunPoint) {
+      points.push({
+        lat: wrappedSunPoint[0],
+        lng: wrappedSunPoint[1],
+        color: '#FFD54F',
+        size: 12.0,
+        label: 'SUN'
+      });
+    }
+
+    return points;
+  }, [planePoint, wrappedSunPoint, progress]); // Added progress dependency
+
+  /* Combine static and dynamic points */
+  const allPoints = useMemo(() => {
+    return [...(globeData.staticPoints || []), ...dynamicPoints];
+  }, [globeData.staticPoints, dynamicPoints]);
+
+  /* leaflet icons for 2D map */
+  const icon = (file) =>
+    new L.Icon({ iconUrl: process.env.PUBLIC_URL + `/markers/${file}`, iconSize: [32, 32], iconAnchor: [16, 32] });
+  const startIcon = icon('marker-start.png');
+  const endIcon   = icon('marker-end.png');
+  const sunIcon   = icon('sun-marker.png');
+  
+  /* Memoized plane icon creation to prevent recreation on every render */
+  const createPlaneIcon = useMemo(() => {
+    const planeImage = isDarkMode ? 'plane-dark.png' : 'plane.png';
+    return (rotation) => new L.Icon({
+      iconUrl: process.env.PUBLIC_URL + `/markers/${planeImage}`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      className: 'plane-icon',
+      html: `<div style="transform: rotate(${rotation}deg); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+               <img src="${process.env.PUBLIC_URL + `/markers/${planeImage}`}" style="width: 32px; height: 32px;" />
+             </div>`
+    });
+  }, [isDarkMode]);
 
 
   /* Auto-play functionality */
@@ -260,26 +371,7 @@ export default function Results() {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [handlePlayPause]);
 
-  /* leaflet icons */
-  const icon = (file) =>
-    new L.Icon({ iconUrl: process.env.PUBLIC_URL + `/markers/${file}`, iconSize: [32, 32], iconAnchor: [16, 32] });
-  const startIcon = icon('marker-start.png');
-  const endIcon   = icon('marker-end.png');
-  const sunIcon   = icon('sun-marker.png');
-  
-  /* Memoized plane icon creation to prevent recreation on every render */
-  const createPlaneIcon = useMemo(() => {
-    const planeImage = isDarkMode ? 'plane-dark.png' : 'plane.png';
-    return (rotation) => new L.Icon({
-      iconUrl: process.env.PUBLIC_URL + `/markers/${planeImage}`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-      className: 'plane-icon',
-      html: `<div style="transform: rotate(${rotation}deg); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-               <img src="${process.env.PUBLIC_URL + `/markers/${planeImage}`}" style="width: 32px; height: 32px;" />
-             </div>`
-    });
-  }, [isDarkMode]);
+
 
       return (
       <Stack sx={{ p: 4, height: '100vh', position: 'relative' }}>
@@ -324,9 +416,9 @@ export default function Results() {
 
         {/* Main Content Section */}
         <Stack direction="row" spacing={3} sx={{ flex: 1 }}>
-          {/* Map Section - Left Side */}
+          {/* Map/Globe Section - Left Side */}
           <Box sx={{ 
-            width: '50vw', 
+            width: '50%', 
             height: 'calc(100vh - 200px)', 
             maxHeight: 'calc(100vh - 200px)',
             borderRadius: 4,
@@ -334,45 +426,122 @@ export default function Results() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
             border: '2px solid rgba(255, 255, 255, 0.1)',
             transition: 'all 0.3s ease',
+            position: 'relative',
             '&:hover': {
               boxShadow: '0 12px 40px rgba(0, 0, 0, 0.25)',
               transform: 'translateY(-2px)',
             },
           }}>
-            <div style={{ height: '100%', width: '100%' }}>
-              <MapContainer
-                center={[20, 0]} 
-                zoom={2} 
-                style={{ height: '100%', width: '100%' }} 
-                scrollWheelZoom={true}
-                zoomControl={false}
-              >
-                <MapZoomController fromAp={fromAp} toAp={toAp} />
-                <TileLayer 
-                  url={isDarkMode 
-                    ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-                    : "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png"
-                  } 
+            {/* View Toggle Button */}
+            <IconButton
+              onClick={() => setIsGlobeView(!isGlobeView)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 1000,
+                bgcolor: 'background.paper',
+                boxShadow: 2,
+                '&:hover': {
+                  bgcolor: 'background.paper',
+                  transform: 'scale(1.1)',
+                },
+              }}
+            >
+              {isGlobeView ? <Map /> : <Public />}
+            </IconButton>
+            
+            {/* 3D Globe View */}
+            {isGlobeView && (
+              <div style={{ height: '100%', width: '100%', position: 'relative' }}>
+                <Globe
+                  ref={globeRef}
+                  globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+                  backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+                  arcsData={globeData.arcs}
+                  arcColor="color"
+                  arcStroke="stroke"
+                  arcDashLength="dashLength"
+                  arcDashGap="dashGap"
+                  arcDashAnimateTime="dashAnimateTime"
+                  pointsData={allPoints}
+                  pointColor="color"
+                  pointSize="size"
+                  pointAltitude={0.1}
+                  pointLabel="label"
+                  pointLabelDotRadius={0}
+                  pointLabelSize={1.0}
+                  pointLabelResolution={6}
+                  pointLabelAltitude={0.02}
+                  pointLabelIncludeDot={false}
+                  enablePointerInteraction={true}
+                  enableGlobeRotation={true}
+                  enableZoom={true}
+                  enablePan={true}
+                  globeRadius={200}
+                  atmosphereColor={isDarkMode ? '#1a1a1a' : '#87CEEB'}
+                  atmosphereAltitude={0.15}
+                  width={1200}
+                  height={1000}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%'
+                  }}
+                  onGlobeClick={() => {
+                    // Optional: handle globe clicks
+                  }}
+                  onPointClick={(point) => {
+                    console.log('Clicked point:', point);
+                  }}
+                  onPointHover={(point) => {
+                    // Optional: handle point hover
+                  }}
+
+
                 />
-                          {coordsLatLng.length > 1 && (
-              <>
-                <Polyline positions={coordsLatLng} color="red" />
-                <Marker position={coordsLatLng[0]} icon={startIcon} />
-                <Marker position={coordsLatLng.at(-1)} icon={endIcon} />
-                {wrappedSunPoint && (
-                  <Marker position={wrappedSunPoint} icon={sunIcon} />
-                )}
-                {planePoint && (
-                  <Marker 
-                    position={planePoint} 
-                    icon={createPlaneIcon(planeRotation)}
-                  />
-                )}
-              </>
+              </div>
             )}
-                                  </MapContainer>
-                    </div>
-                  </Box>
+            
+            {/* 2D Map View */}
+            {!isGlobeView && (
+              <div style={{ height: '100%', width: '100%' }}>
+                <MapContainer
+                  center={[20, 0]} 
+                  zoom={2} 
+                  style={{ height: '100%', width: '100%' }} 
+                  scrollWheelZoom={true}
+                  zoomControl={false}
+                >
+                  <MapZoomController fromAp={fromAp} toAp={toAp} />
+                  <TileLayer 
+                    url={isDarkMode 
+                      ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+                      : "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png"
+                    } 
+                  />
+                  {coordsLatLng.length > 1 && (
+                    <>
+                      <Polyline positions={coordsLatLng} color="red" />
+                      <Marker position={coordsLatLng[0]} icon={startIcon} />
+                      <Marker position={coordsLatLng.at(-1)} icon={endIcon} />
+                      {wrappedSunPoint && (
+                        <Marker position={wrappedSunPoint} icon={sunIcon} />
+                      )}
+                      {planePoint && (
+                        <Marker 
+                          position={planePoint} 
+                          icon={createPlaneIcon(planeRotation)}
+                        />
+                      )}
+                    </>
+                  )}
+                </MapContainer>
+              </div>
+            )}
+          </Box>
 
       {/* Controls Section - Right Side */}
       <Stack 
