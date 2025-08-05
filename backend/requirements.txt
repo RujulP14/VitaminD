@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+astral
+geographiclib
+python-dotenv
+requests
+ephem
